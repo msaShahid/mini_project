@@ -5,14 +5,13 @@ import { registerSchema, loginSchema, RegisterInput, LoginInput } from '@validat
 import mongoose from 'mongoose';
 import { formatZodErrors } from '@utils/validation';
 
-// Generate JWT token
+
 const generateToken = (id: string | mongoose.Types.ObjectId): string => {
   return jwt.sign({ id: id.toString() }, process.env.JWT_SECRET as string, {
     expiresIn: '7d',
   });
 };
 
-// Register a new user
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
@@ -40,7 +39,6 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-// Login user
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
@@ -75,7 +73,6 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-// Get user profile
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await userService.findById(req.userId!);
