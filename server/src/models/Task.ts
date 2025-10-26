@@ -1,13 +1,5 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
-
-export interface ITask extends Document {
-  userId: mongoose.Types.ObjectId;
-  title: string;
-  description?: string;
-  status: 'Pending' | 'InProgress' | 'Hold' | 'Done';
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { ITask } from 'types/task.types';
 
 const taskSchema = new Schema<ITask>(
   {
