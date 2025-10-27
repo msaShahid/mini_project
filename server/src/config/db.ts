@@ -10,4 +10,12 @@ const connectDB = async (): Promise<void> => {
   }
 };
 
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('MongoDB reconnected');
+});
+
 export default connectDB;
