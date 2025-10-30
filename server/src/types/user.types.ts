@@ -7,3 +7,9 @@ export interface IUser {
   password: string;
   comparePassword(candidate: string): Promise<boolean>;
 }
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+}
