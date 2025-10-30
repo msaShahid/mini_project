@@ -3,15 +3,20 @@ import { z } from 'zod';
 import taskService from '@services/taskService';
 import { taskSchema, TaskInput } from '@validators/task.validation';
 import { formatZodErrors } from '@utils/validation';
+import { AppError } from '@utils/AppError';
+import { asyncHandler } from '@utils/asyncHandler';
 
 
 export const getTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tasks = await taskService.getTasks(req.userId!, req.query);
+    const userId = req.userId!;
+    const { data, metaData } = await taskService.getTasks(userId, req.query);
+
     res.status(200).json({
       success: true,
       message: 'Tasks fetched successfully',
-      data: tasks,
+      data,
+      metaData,
     });
   } catch (err) {
     next(err);
@@ -55,7 +60,9 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
       });
     }
 
-    const task = await taskService.updateTask(req.params.id, parsed.data, req.userId!);
+    const task = await taskService.updateTask(req.params.id, parsed.data);
+    if (!task) throw new AppError('Task not found', 404);
+    
     res.status(200).json({
       success: true,
       message: 'Task updated successfully',
@@ -66,14 +73,15 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await taskService.deleteTask(req.params.id, req.userId!);
-    res.status(200).json({
-      success: true,
-      message: 'Task deleted successfully',
-    });
-  } catch (err) {
-    next(err);
-  }
-};
+export const deleteTask = asyncHandler(async (req: Request, res: Response) => {
+
+  const task = await taskService.deleteTask(req.params.id, req.userId!);
+
+  if (!task) throw new AppError('Task not found', 404);
+
+  res.status(200).json({
+    success: true,
+    message: 'Task deleted successfully',
+  });
+  
+});
