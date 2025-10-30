@@ -1,37 +1,39 @@
 import Task from '@models/Task';
-import {ITask} from '../types/task.types'
+import { ITask } from '../types/task.types'
+import { paginateAndFilter } from '@utils/paginateAndFilter';
 
 interface TaskQuery {
   status?: string;
   q?: string;
   page?: string;
   limit?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
-const getTasks = async (userId: string, query: TaskQuery): Promise<ITask[]> => {
-  const filter: Record<string, any> = { userId };
+const getTasks = async (userId: string, query: TaskQuery) => {
+  const filter: Record<string, any> = {};
 
-  if (query.status !== undefined) {
-    filter.status = query.status === 'Pending';
+  if (query.status) {
+    filter.status = query.status;
   }
 
   if (query.q) {
     filter.title = { $regex: query.q, $options: 'i' };
   }
 
-  const page = parseInt(query.page || '1');
-  const limit = parseInt(query.limit || '10');
-  const skip = (page - 1) * limit;
+  return paginateAndFilter<ITask>(Task, filter, query, {
+    select: '-__v',
+  });
 
-  return Task.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 });
 };
 
 const createTask = async (userId: string, data: Partial<ITask>): Promise<ITask> => {
   return Task.create({ ...data, userId });
 };
 
-const updateTask = async (id: string, data: Partial<ITask>, userId: string): Promise<ITask | null> => {
-  return Task.findOneAndUpdate({ _id: id, userId }, data, { new: true });
+const updateTask = async (id: string, data: Partial<ITask>): Promise<ITask | null> => {
+  return Task.findOneAndUpdate({ _id: id }, data, { new: true });
 };
 
 const deleteTask = async (id: string, userId: string): Promise<ITask | null> => {

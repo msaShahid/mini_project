@@ -1,10 +1,33 @@
 import User from '@models/User';
-import { IUser } from '../types/user.types';
+import { CreateUserInput, IUser } from '../types/user.types';
+import { paginateAndFilter } from '@utils/paginateAndFilter';
 
-interface CreateUserInput {
-  name: string;
-  email: string;
-  password: string;
+interface TaskQuery {
+  status?: string;
+  q?: string;
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+const getAllUser = async (userId: string, query: TaskQuery) => {
+  const filter: Record<string, any> = {};
+
+  if (query.status) {
+    filter.status = query.status;
+  }
+
+  if (query.q) {
+    filter.$or = [
+      { name: { $regex: query.q, $options: 'i' } },
+      { email: { $regex: query.q, $options: 'i' } },
+    ];
+  }
+
+  return paginateAndFilter<IUser>(User, filter, query, {
+    select: '-__v -password',
+  });
 }
 
 const createUser = async (data: CreateUserInput): Promise<IUser> => {
@@ -25,4 +48,4 @@ const findById = async (id: string): Promise<IUser | null> => {
   return User.findById(id).select('-password');
 };
 
-export default { createUser, findByEmail, findById };
+export default { getAllUser, createUser, findByEmail, findById };
