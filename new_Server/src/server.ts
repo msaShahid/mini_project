@@ -3,14 +3,14 @@ import mongoose from 'mongoose'
 import dotEvn from 'dotenv'
 import cors from 'cors'
 import apiRouter from './routes/index.js'
-
+import path from 'path'
 
 dotEvn.config();
-const app = express();
+export const app = express();
 
 app.use(express.json())
 app.use(cors());
-
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use('/api/v1', apiRouter );
 
@@ -32,5 +32,3 @@ mongoose.connect(process.env.MONGO_URL as string)
 .catch((err) => {
     console.log('Something went wrong :', err);
 })
-
-
