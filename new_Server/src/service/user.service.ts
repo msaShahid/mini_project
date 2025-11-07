@@ -2,8 +2,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User, { IUser, ILoginResponse } from '../models/user.model.js';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-
 const userService = {
 
     async userList(): Promise<IUser[]> {
@@ -31,15 +29,15 @@ const userService = {
     },
 
     async userLogin(email: string, password: string): Promise<ILoginResponse | null> {
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email });
         if (!user) return null;
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return null;
-
+        
         const token = jwt.sign(
             { id: user._id.toString(), email: user.email },
-            JWT_SECRET,
+            process.env.JWT_SECRET as string,
             { expiresIn: "1h" }
         );
 
