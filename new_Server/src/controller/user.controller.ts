@@ -3,95 +3,149 @@ import userService from "../service/user.service.js";
 
 const userController = {
 
-    list: async (req: Request, res: Response, next: NextFunction) => {
-        try{
-            const body = req.body;
-            const data = await userService.userList();
-            res.status(200).json({
-                message: 'User List fetch successfully',
-                data
-            })
-        }catch(error){
-            next(error);
-        }
-    },
+	list: async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const body = req.body;
+			const data = await userService.userList();
+			res.status(200).json({
+				message: 'User List fetch successfully',
+				data
+			})
+		} catch (error) {
+			next(error);
+		}
+	},
 
-    getUser:  async (req: Request<{id : string}>, res: Response, next: NextFunction) => {
-        try{
-            const {id} = req.params;
-            const data = await userService.findUserById(id);
+	getUser: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+		try {
+			const { id } = req.params;
+			const data = await userService.findUserById(id);
 
-            if(!data){
-                return res.status(404).json({
-                    message: 'User not found',
-                })
-            }
+			if (!data) {
+				return res.status(404).json({
+					message: 'User not found',
+				})
+			}
 
-            res.status(200).json({
-                message: 'User Details.',
-                data
-            })
-        }catch(error){
-            next(error)
-        }
-    },
+			res.status(200).json({
+				message: 'User Details.',
+				data
+			})
+		} catch (error) {
+			next(error)
+		}
+	},
 
-    create: async (req: Request, res: Response, next: NextFunction) => {
-        try{
-            const newData = req.body;
-            
-            const existingUser = await userService.findUserByEmail(newData.email);
-            if(existingUser){
-                return res.status(409).json({
-                    message: `User already exit with this ${newData.email}`,
-                });
-            }
+	register: async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const newData = req.body;
 
-            const user = await userService.userCreate(newData);
-            res.status(201).json({
-                message: 'User create successfully.',
-                data: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email
-                }
+			const existingUser = await userService.findUserByEmail(newData.email);
+			if (existingUser) {
+				return res.status(409).json({
+					message: `User already exit with this ${newData.email}`,
+				});
+			}
 
-            })
-        }catch(error){
-            next(error);
-        }
-    },
+			const user = await userService.userRegiter(newData);
+			res.status(201).json({
+				message: 'User create successfully.',
+				data: {
+					id: user._id,
+					name: user.name,
+					email: user.email
+				}
 
-    update: async (req: Request <{id: string}>, res: Response, next: NextFunction) => {
-        const {id} = req.params;
-        const newData = req.body;
-        const data = await userService.userUpdate(id, newData);
+			})
+		} catch (error) {
+			next(error);
+		}
+	},
 
-        if(!data){
-            return res.status(404).json({
-                message: 'User not found',
-            })
-        }
+	login: async (req: Request, res: Response, next: NextFunction) => {
+		try{
+			const {email, password} = req.body;
 
-        res.status(200).json({
-            message: 'User update successfully.'
-        })
-    },
+			if(!email && !password){
+				return res.status(400).json({
+					message: 'Email and Password are required.'
+				})
+			}
 
-    delete:  async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
-        const {id} = req.params;
-        const data = await userService.userDelete(id);
+			const result = await userService.userLogin(email, password);
 
-        if(!data){
-            return res.status(404).json({
-                message: 'User not found',
-            })
-        }
+			if(!result){
+				return res.status(401).json({
+					message: 'Invalid Email and Password '
+				})
+			}
+			
+			return res.status(200).json({
+				message: 'Login successfully.',
+				data: {
+					token: result.token,
+					user: result.user
+				}
+			});
 
-        res.status(200).json({
-            message: 'User delete successfully.'
-        })
-    }
+		}catch(error){
+			next(Error);
+		}
+	},
+
+	update: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+		try {
+			const { id } = req.params;
+			const newData = req.body;
+			const data = await userService.userUpdate(id, newData);
+
+			if (!data) {
+				return res.status(404).json({
+					message: 'User not found',
+				})
+			}
+
+			res.status(200).json({
+				message: 'User update successfully.'
+			})
+		} catch (error) {
+			next(error);
+		}
+	},
+
+	delete: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+		try {
+			const { id } = req.params;
+			const data = await userService.userDelete(id);
+
+			if (!data) {
+				return res.status(404).json({
+					message: 'User not found',
+				})
+			}
+
+			res.status(200).json({
+				message: 'User delete successfully.'
+			})
+		} catch (error) {
+			next(error);
+		}
+	},
+
+	uploadProfileImage: async (req: Request, res: Response, next: NextFunction) => {
+		const file = req.file;
+		if (!file) {
+			return res.status(400).json({
+				message: 'No file uploaded.',
+			})
+		}
+
+		res.status(200).json({
+			message: 'Profile image uploaded successfully.',
+			file: file,
+			url: `/uploads/users/${file.filename}`
+		})
+	}
 
 }
 
