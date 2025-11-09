@@ -7,26 +7,28 @@ import { formatZodErrors } from '@utils/validation';
 import { AppError } from '@utils/AppError';
 
 
-const generateToken = (id: string | mongoose.Types.ObjectId): string => {
-  return jwt.sign({ id: id.toString() }, process.env.JWT_SECRET as string, {
-    expiresIn: '7d',
-  });
+const generateToken = (id: string | mongoose.Types.ObjectId, email: string): string => {
+  return jwt.sign(
+    { id: id.toString(), email: email},
+    process.env.JWT_SECRET as string,
+    { expiresIn: '1h', }
+  );
 };
 
 
 export const getAllUser = async (req: Request, res: Response, next: NextFunction) => {
-  try{
+  try {
     const userId = req.userId!;
     const { data, metaData } = await userService.getAllUser(userId, req.query);
-    
+
     res.status(200).json({
       success: true,
       message: 'User fetched successfully',
       data,
-      metaData, 
+      metaData,
     });
 
-  }catch(err){
+  } catch (err) {
     next(err);
   }
 }
@@ -46,7 +48,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     const { name, email, password }: RegisterInput = parsed.data;
 
     const user = await userService.createUser({ name, email, password });
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.email);
 
     res.status(201).json({
       success: true,
@@ -78,7 +80,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       throw new AppError('Invalid credentials', 401);
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.email);
 
     res.status(200).json({
       success: true,
