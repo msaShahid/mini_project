@@ -10,7 +10,7 @@ const Dashboard: React.FC = () => {
 
   const handleAddTask = () => {
     console.log("Add Task clicked");
-    // You can later implement modal or redirect to add task page
+    
   };
 
   const fetchTasks = async () => {
@@ -18,7 +18,7 @@ const Dashboard: React.FC = () => {
     setError(null);
     try {
       const response = await taskService.getAll();
-      console.log("Fetched tasks:", response);
+     // console.log("Fetched tasks:", response);
       setTasks(response);
     } catch (err: any) {
       setError(err.message || "Failed to fetch tasks");

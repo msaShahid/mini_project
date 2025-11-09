@@ -1,10 +1,13 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../../context/AuthContext";
+//import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import ROUTES from "../../routes/ROUTES";
 import { LogIn } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from '../../store/redux/authSlice';
+import { RootState, AppDispatch } from "../../store/redux/store";
 
 type LoginInputs = {
   email: string;
@@ -12,7 +15,13 @@ type LoginInputs = {
 };
 
 const Login: React.FC = () => {
-  const { login, user } = useAuth();
+  
+  // Context API version 
+  // const { login, user } = useAuth();
+
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,17 +31,35 @@ const Login: React.FC = () => {
     if (user) navigate(ROUTES.DASHBOARD, { replace: true });
   }, [user, navigate]);
 
-  const onSubmit = async (data: LoginInputs) => {
-    try {
-      await login(data.email, data.password);
-      toast.success("Welcome back!");
-      const from = (location.state as any)?.from?.pathname || ROUTES.DASHBOARD;
-      navigate(from, { replace: true });
-    } catch (error) {
-      toast.error("Invalid credentials");
-      console.log(error);
-    }
-  };
+  // const onSubmit = async (data: LoginInputs) => {
+  //   try {
+  //     await login(data.email, data.password);
+  //     toast.success("Welcome back!");
+  //     const from = (location.state as any)?.from?.pathname || ROUTES.DASHBOARD;
+  //     navigate(from, { replace: true });
+  //   } catch (error) {
+  //     toast.error("Invalid credentials");
+  //     console.log(error);
+  //   }
+  // };
+
+    const onSubmit = async (data: LoginInputs) => {
+      try {
+        const resultAction = await dispatch(loginUser(data));
+
+        // Redux Toolkit createAsyncThunk returns action with meta info
+        if (loginUser.fulfilled.match(resultAction)) {
+          toast.success(`Welcome back, ${resultAction.payload.name}!`);
+          const from = (location.state as any)?.from?.pathname || ROUTES.DASHBOARD;
+          navigate(from, { replace: true });
+        } else {
+          toast.error(resultAction.payload || "Invalid credentials");
+        }
+      } catch (err) {
+        toast.error("Login failed. Please try again.");
+        console.error(err);
+      }
+    };
 
   return (
     <div className="space-y-6 animate-fade-in">

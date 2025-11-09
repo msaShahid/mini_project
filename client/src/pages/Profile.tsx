@@ -1,10 +1,26 @@
-import { useAuth } from "../context/AuthContext";
+//import { useAuth } from "../context/AuthContext";
+// rRedux
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "../store/redux/store";
+import { logoutUser } from "../store/redux/authSlice";
 
 const Profile: React.FC = () => {
-  const { user, logout } = useAuth();
+
+
+  // Context API version 
+  // const { user, logout } = useAuth();
+
+  // Reduc Version
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
-    logout();
+
+    // Context API
+    //logout();
+
+    // Redux
+    dispatch(logoutUser());
   };
 
   return (

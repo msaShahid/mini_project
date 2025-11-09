@@ -2,13 +2,29 @@ import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import ROUTES from '../../routes/ROUTES';
-import { useAuth } from '../../context/AuthContext';
+
+// context api
+//import { useAuth } from '../../context/AuthContext';
+
+// redux
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "../../store/redux/store";
+import { logoutUser } from "../../store/redux/authSlice";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
-  const { user, logout } = useAuth();
+  // Context API version 
+  // const { user, logout } = useAuth();
+
+  // Redux version
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+  };
 
   const navLinks = [
     { label: 'Home', to: ROUTES.HOME },
@@ -45,7 +61,7 @@ export const Header = () => {
               <>
                 <NavLink to={ROUTES.PROFILE} className="text-blue-600 hover:text-blue-700 font-medium">Profile</NavLink>
                 <NavLink to={ROUTES.DASHBOARD} className="text-blue-600 hover:text-blue-700 font-medium">Dashboard</NavLink>
-                <button onClick={logout} className="text-red-600 hover:text-red-700 font-medium">Logout</button>
+                <button onClick={handleLogout} className="text-red-600 hover:text-red-700 font-medium">Logout</button>
               </>
             ) : (
               <>
