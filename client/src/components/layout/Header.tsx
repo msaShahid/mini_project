@@ -8,7 +8,7 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
-  const { user, logout } = useAuth() || {};
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { label: 'Home', to: ROUTES.HOME },
@@ -34,7 +34,7 @@ export const Header = () => {
                 key={label}
                 to={to}
                 className={({ isActive }) =>
-                    `font-medium transition-colors duration-200 ${ isActive ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`
+                  `font-medium transition-colors duration-200 ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`
                 }
               >
                 {label}
@@ -42,20 +42,20 @@ export const Header = () => {
             ))}
 
             {user ? (
-                  <>
-                      <NavLink to={ROUTES.PROFILE} className="text-blue-600 hover:text-blue-700 font-medium">Profile</NavLink>
-                      <NavLink to={ROUTES.DASHBOARD} className="text-blue-600 hover:text-blue-700 font-medium">Dashboard</NavLink>
-                      <button onClick={logout} className="text-red-600 hover:text-red-700 font-medium">Logout</button>
-                  </>
-              ) : (
-                  <>
-                      <NavLink to={ROUTES.AUTH.LOGIN} className="text-blue-600 hover:text-blue-700 font-medium">Login</NavLink>
-                      <NavLink to={ROUTES.AUTH.REGISTER} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">Sign Up</NavLink>
-                  </>
-              )
+              <>
+                <NavLink to={ROUTES.PROFILE} className="text-blue-600 hover:text-blue-700 font-medium">Profile</NavLink>
+                <NavLink to={ROUTES.DASHBOARD} className="text-blue-600 hover:text-blue-700 font-medium">Dashboard</NavLink>
+                <button onClick={logout} className="text-red-600 hover:text-red-700 font-medium">Logout</button>
+              </>
+            ) : (
+              <>
+                <NavLink to={ROUTES.AUTH.LOGIN} className="text-blue-600 hover:text-blue-700 font-medium">Login</NavLink>
+                <NavLink to={ROUTES.AUTH.REGISTER} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">Sign Up</NavLink>
+              </>
+            )
             }
-            
-            
+
+
           </nav>
 
           {/* Mobile Menu Button */}

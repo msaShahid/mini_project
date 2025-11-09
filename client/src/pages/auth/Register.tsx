@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import ROUTES from "../../routes/ROUTES";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { usersApi } from "../../api/usersApi";
 
 type RegisterInputs = {
   name: string;
@@ -14,7 +14,7 @@ type RegisterInputs = {
 };
 
 const Register: React.FC = () => {
-  const { register: registerUser } = useAuth();
+
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -26,11 +26,11 @@ const Register: React.FC = () => {
     formState: { errors, isSubmitting },
   } = useForm<RegisterInputs>();
 
-  const password = watch("password"); 
+  const password = watch("password");
 
   const onSubmit = async (data: RegisterInputs) => {
     try {
-      await registerUser(data.name, data.email, data.password);
+      await usersApi.userRegister(data);
       toast.success("Account created successfully!");
       navigate(ROUTES.AUTH.LOGIN, { replace: true });
     } catch (error) {

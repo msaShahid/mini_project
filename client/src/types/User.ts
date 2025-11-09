@@ -1,7 +1,8 @@
 export interface User {
-  id: string;
+  _id: string;      
   name: string;
   email: string;
+  token: string;
 }
 
 export interface RegisterPayload {
@@ -16,6 +17,14 @@ export interface LoginPayload {
 }
 
 export interface LoginResponse {
-  token: string;
-  user: User;
+  success: boolean;
+  message: string;
+  data: User; 
+}
+
+export interface AuthState {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }

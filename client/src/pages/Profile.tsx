@@ -1,19 +1,16 @@
-import { useAuth } from "../context/AuthContext"; 
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Profile: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate("/auth/login");
   };
 
   return (
     <section className="bg-gradient-to-r from-blue-300 to-indigo-400 min-h-screen flex items-center justify-center py-20">
       <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
-        
+
         <div className="md:w-1/3 bg-blue-600 flex items-center justify-center p-8">
           <div className="w-32 h-32 rounded-full bg-blue-300 flex items-center justify-center text-4xl font-bold text-white">
             {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
