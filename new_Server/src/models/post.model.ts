@@ -5,9 +5,9 @@ export interface IPost {
     name: String,
     description: String,
     images? : String[],
-    tag: mongoose.Types.ObjectId[],
-    likesCount: Number,
-    status: String
+    tag?: mongoose.Types.ObjectId[],
+    likesCount?: Number,
+    status?: String
 }
 
 const postSchema = new Schema<IPost>(
@@ -18,7 +18,7 @@ const postSchema = new Schema<IPost>(
         images: [{type: String}],
         tag: [{type: mongoose.Schema.Types.ObjectId, ref: 'Tag'}],
         likesCount: {type: Number, default: 0},
-        status: {type: String}
+        status: {type: String, default: 'inactive'}
     },
     {
         timestamps: true,
