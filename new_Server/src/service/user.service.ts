@@ -36,7 +36,7 @@ const userService = {
         if (!isMatch) return null;
         
         const token = jwt.sign(
-            { id: user._id.toString(), email: user.email },
+            { id: user._id.toString(), name: user.name, email: user.email },
             process.env.JWT_SECRET as string,
             { expiresIn: "1h" }
         );
