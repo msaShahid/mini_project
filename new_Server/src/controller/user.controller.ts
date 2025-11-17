@@ -63,10 +63,10 @@ const userController = {
 	},
 
 	login: async (req: Request, res: Response, next: NextFunction) => {
-		try{
-			const {email, password} = req.body;
+		try {
+			const { email, password } = req.body;
 
-			if(!email && !password){
+			if (!email && !password) {
 				return res.status(400).json({
 					message: 'Email and Password are required.'
 				})
@@ -74,22 +74,25 @@ const userController = {
 
 			const result = await userService.userLogin(email, password);
 
-			if(!result){
+			if (!result) {
 				return res.status(401).json({
 					message: 'Invalid Email and Password '
 				})
 			}
-			
+
 			return res.status(200).json({
-				message: 'Login successfully.',
+				success: true,
+				message: 'User logged in successfully',
 				data: {
-					token: result.token,
-					user: result.user
+					_id: result.user.id,
+					name: result.user.name,
+					email: result.user.email,
+					token: result.token 
 				}
 			});
 
-		}catch(error){
-			next(Error);
+		} catch (error) {
+			next(error);
 		}
 	},
 
