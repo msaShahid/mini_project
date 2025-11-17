@@ -9,12 +9,12 @@ const getToken = (): string | null => {
 };
 
 export const GuestApi = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${API_BASE_URL}/api/v1`,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
 export const AuthApi = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${API_BASE_URL}/api/v1`,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 

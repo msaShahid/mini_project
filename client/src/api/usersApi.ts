@@ -5,7 +5,7 @@ import { User, LoginResponse, LoginPayload, RegisterPayload } from "../types/Use
 export const usersApi = {
 
   async userRegister(data: RegisterPayload): Promise<User> {
-    const response = await GuestApi.post<LoginResponse>(endpoints.users.register, data);
+    const response = await GuestApi.post<LoginResponse>(endpoints.user.register, data);
 
     if (!response.data.success) {
       throw new Error(response.data.message || "Registration failed");
@@ -14,10 +14,9 @@ export const usersApi = {
   },
 
   async login(data: LoginPayload): Promise<User> {
-    const response = await GuestApi.post<LoginResponse>(endpoints.users.login, data);
+    const response = await GuestApi.post<LoginResponse>(endpoints.user.login, data);
     const body = response.data;
     
-
     if (!body.success) {
       throw new Error(body.message || "Login failed");
     }
@@ -31,7 +30,7 @@ export const usersApi = {
 
 
   async getProfile(): Promise<User> {
-    const response = await AuthApi.get<{ success: boolean; data: User }>(endpoints.users.profile);
+    const response = await AuthApi.get<{ success: boolean; data: User }>(endpoints.user.profile);
 
     if (!response.data.success) {
       throw new Error("Failed to fetch profile");

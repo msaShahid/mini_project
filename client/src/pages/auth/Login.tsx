@@ -43,23 +43,22 @@ const Login: React.FC = () => {
   //   }
   // };
 
-    const onSubmit = async (data: LoginInputs) => {
-      try {
-        const resultAction = await dispatch(loginUser(data));
-
-        // Redux Toolkit createAsyncThunk returns action with meta info
-        if (loginUser.fulfilled.match(resultAction)) {
-          toast.success(`Welcome back, ${resultAction.payload.name}!`);
-          const from = (location.state as any)?.from?.pathname || ROUTES.DASHBOARD;
-          navigate(from, { replace: true });
-        } else {
-          toast.error(resultAction.payload || "Invalid credentials");
-        }
-      } catch (err) {
-        toast.error("Login failed. Please try again.");
-        console.error(err);
+  const onSubmit = async (data: LoginInputs) => {
+    try {
+      const resultAction = await dispatch(loginUser(data));
+      // Redux Toolkit createAsyncThunk returns action with meta info
+      if (loginUser.fulfilled.match(resultAction)) {
+        toast.success(`Welcome back, ${resultAction.payload.name}!`);
+        const from = (location.state as any)?.from?.pathname || ROUTES.DASHBOARD;
+        navigate(from, { replace: true });
+      } else {
+        toast.error(resultAction.payload as string);
       }
-    };
+    } catch (err) {
+      toast.error("Login failed. Please try again.");
+      console.error(err);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
