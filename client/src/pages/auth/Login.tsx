@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ROUTES from "../../routes/ROUTES";
 import { LogIn } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from '../../store/redux/authSlice';
+import { loginUser } from '../../store/redux/slices/authSlice';
 import { RootState, AppDispatch } from "../../store/redux/store";
 
 type LoginInputs = {

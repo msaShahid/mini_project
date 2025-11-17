@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./authSlice";
+import authReducer from "./slices/authSlice";
+import postReducer  from './slices/postSlice'
 
 // centralized Redux store
 export const store = configureStore({
   reducer: {
     auth: authReducer, 
+    posts : postReducer,
   },
   devTools: import.meta.env.MODE !== "production",
 });

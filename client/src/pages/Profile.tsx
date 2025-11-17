@@ -2,7 +2,7 @@
 // rRedux
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../store/redux/store";
-import { logoutUser } from "../store/redux/authSlice";
+import { logoutUser } from "../store/redux/slices/authSlice";
 
 const Profile: React.FC = () => {
 

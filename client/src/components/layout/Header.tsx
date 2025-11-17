@@ -9,7 +9,7 @@ import ROUTES from '../../routes/ROUTES';
 // redux
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store/redux/store";
-import { logoutUser } from "../../store/redux/authSlice";
+import { logoutUser } from "../../store/redux/slices/authSlice";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
