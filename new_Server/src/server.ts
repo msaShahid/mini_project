@@ -4,6 +4,8 @@ import dotEvn from 'dotenv'
 import cors from 'cors'
 import apiRouter from './routes/index.js'
 import path from 'path'
+import { rateLimiter } from './middleware/rateLimiter.middleware.js'
+import { loggerMiddleware } from './middleware/logger.middleware.js'
 
 dotEvn.config();
 export const app = express();
@@ -12,7 +14,9 @@ app.use(express.json())
 app.use(cors());
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-app.use('/api/v1', apiRouter );
+app.use(loggerMiddleware);
+
+app.use('/api/v1', rateLimiter, apiRouter );
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
