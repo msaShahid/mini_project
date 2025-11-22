@@ -1,38 +1,54 @@
-import express, {Request, Response ,NextFunction } from 'express'
-import mongoose from 'mongoose'
-import dotEvn from 'dotenv'
-import cors from 'cors'
-import apiRouter from './routes/index.js'
-import path from 'path'
-import { rateLimiter } from './middleware/rateLimiter.middleware.js'
-import { loggerMiddleware } from './middleware/logger.middleware.js'
+import cluster from 'cluster';
+import os from 'os';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import app from './app.js';
+import { logger } from './utils/logger.js';
 
-dotEvn.config();
-export const app = express();
+dotenv.config({ path: '.env' });
 
-app.use(express.json())
-app.use(cors());
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+const PORT = process.env.PORT || 5000;
+const numCPUs = os.cpus().length;
 
-app.use(loggerMiddleware);
+if (cluster.isPrimary) {
+  logger.info(`Master ${process.pid} is running`);
 
-app.use('/api/v1', rateLimiter, apiRouter );
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
 
-// Global Error Handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.log(err.stack);
+  // Restart worker on exit
+  cluster.on('exit', (worker, code, signal) => {
+    logger.warn(`Worker ${worker.process.pid} died. Restarting...`);
+    cluster.fork();
+  });
 
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || 'Somthing went wrong.'
+  // shutdown master
+  process.on('SIGTERM', () => {
+    logger.info('Master shutting down gracefully');
+    for (const id in cluster.workers) {
+      cluster.workers[id]?.kill('SIGTERM');
+    }
+    process.exit(0);
+  });
+
+} else {
+  // Worker process: connect to DB and start server
+  mongoose.connect(process.env.MONGO_URL as string)
+    .then(() => {
+      app.listen(PORT, () => {
+        logger.info(`Worker ${process.pid} started on port ${PORT}`);
+      });
     })
-})
+    .catch((err) => {
+      logger.error('MongoDB connection error:', err);
+      process.exit(1);
+    });
 
-const PORT = process.env.PORT || 5000
-mongoose.connect(process.env.MONGO_URL as string)
-.then(() => {
-    app.listen(PORT, () => console.log(`application is running on ${PORT}`))
-})
-.catch((err) => {
-    console.log('Something went wrong :', err);
-})
+  // shutdown worker
+  process.on('SIGTERM', () => {
+    logger.info(`Worker ${process.pid} shutting down gracefully`);
+    process.exit(0);
+  });
+}
