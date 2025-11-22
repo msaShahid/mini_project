@@ -3,7 +3,10 @@ import Post, {IPost} from '../models/post.model.js'
 const postService = {
 
     async postList(): Promise<IPost[]> {
-        return await Post.find().sort({createdAt: -1});
+        return await Post.find()
+        .populate("userId", "name email -_id")  
+        .select("-__v -updatedAt")                    
+        .sort({ createdAt: -1 }); 
     },
 
     async postFindByUserId(userId: string): Promise<IPost[]> {
