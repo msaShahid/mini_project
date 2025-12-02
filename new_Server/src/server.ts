@@ -35,16 +35,19 @@ if (cluster.isPrimary) {
 
 } else {
   // Worker process: connect to DB and start server
-  mongoose.connect(process.env.MONGO_URL as string)
-    .then(() => {
-      app.listen(PORT, () => {
-        logger.info(`Worker ${process.pid} started on port ${PORT}`);
+
+  if (process.env.MODE !== "test") {
+    mongoose.connect(process.env.MONGO_URL as string)
+      .then(() => {
+        app.listen(PORT, () => {
+          logger.info(`Worker ${process.pid} started on port ${PORT}`);
+        });
+      })
+      .catch((err) => {
+        logger.error('MongoDB connection error:', err);
+        process.exit(1);
       });
-    })
-    .catch((err) => {
-      logger.error('MongoDB connection error:', err);
-      process.exit(1);
-    });
+  }
 
   // shutdown worker
   process.on('SIGTERM', () => {
