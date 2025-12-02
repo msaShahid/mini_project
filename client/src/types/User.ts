@@ -22,6 +22,11 @@ export interface LoginResponse {
   data: User; 
 }
 
+export interface RegisterResponse {
+  message: string;
+  data: User; 
+}
+
 export interface AuthState {
   user: User | null;
   loading: boolean;
