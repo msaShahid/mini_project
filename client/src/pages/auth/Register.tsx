@@ -4,7 +4,9 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import ROUTES from "../../routes/ROUTES";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import { usersApi } from "../../api/usersApi";
+//import { usersApi } from "../../api/usersApi";
+import { useAppDispatch, useAppSelector } from "../../store/redux/hooks";
+import { registerUser } from '../../store/redux/slices/authSlice';
 
 type RegisterInputs = {
   name: string;
@@ -15,27 +17,37 @@ type RegisterInputs = {
 
 const Register: React.FC = () => {
 
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { loading, error } = useAppSelector((state) => state.auth);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterInputs>();
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<RegisterInputs>();
 
   const password = watch("password");
 
+  // useEffect(() => {
+  //   if (user) {
+  //     toast.success(`Account created successfully, ${user.name}!`);
+  //     navigate(ROUTES.AUTH.LOGIN, { replace: true });
+  //   }
+  // }, [user, navigate]);
+
+
   const onSubmit = async (data: RegisterInputs) => {
     try {
-      await usersApi.userRegister(data);
-      toast.success("Account created successfully!");
-      navigate(ROUTES.AUTH.LOGIN, { replace: true });
+      const resultAction = await dispatch(registerUser(data));
+      if (registerUser.fulfilled.match(resultAction)) {
+        toast.success(`Account created successfully, ${resultAction.payload.name}!`);
+        navigate(ROUTES.AUTH.LOGIN, { replace: true });
+      } else {
+        toast.error(resultAction.payload as string || "Registration failed");
+      }
     } catch (error) {
       toast.error("Registration failed");
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -53,6 +65,8 @@ const Register: React.FC = () => {
         </p>
       </div>
 
+      {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -63,7 +77,7 @@ const Register: React.FC = () => {
             placeholder="Jane Doe"
             className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
             {...register("name", { required: "Full name is required" })}
-            disabled={isSubmitting}
+            disabled={loading || isSubmitting}
           />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
         </div>
@@ -78,7 +92,7 @@ const Register: React.FC = () => {
             placeholder="you@example.com"
             className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
             {...register("email", { required: "Email is required" })}
-            disabled={isSubmitting}
+            disabled={loading || isSubmitting}
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
         </div>
@@ -94,7 +108,7 @@ const Register: React.FC = () => {
               placeholder="Create a password"
               className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
               {...register("password", { required: "Password is required", minLength: { value: 6, message: "Password must be at least 6 characters" } })}
-              disabled={isSubmitting}
+              disabled={loading || isSubmitting}
             />
             <button
               type="button"
@@ -121,7 +135,7 @@ const Register: React.FC = () => {
                 required: "Please confirm your password",
                 validate: (value) => value === password || "Passwords do not match",
               })}
-              disabled={isSubmitting}
+              disabled={loading || isSubmitting}
             />
             <button
               type="button"
@@ -137,10 +151,10 @@ const Register: React.FC = () => {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={loading || isSubmitting}
           className="w-full flex justify-center items-center gap-2 py-3 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60"
         >
-          {isSubmitting ? (
+          {loading || isSubmitting ? (
             <span className="animate-pulse">Creating account...</span>
           ) : (
             <>
