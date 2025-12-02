@@ -1,14 +1,14 @@
 import { GuestApi, AuthApi } from "../api/axiosClient";
 import { endpoints } from "./endpoints";
-import { User, LoginResponse, LoginPayload, RegisterPayload } from "../types/User";
+import { User, LoginResponse, RegisterResponse, LoginPayload, RegisterPayload } from "../types/User";
 
 export const usersApi = {
 
   async userRegister(data: RegisterPayload): Promise<User> {
-    const response = await GuestApi.post<LoginResponse>(endpoints.user.register, data);
+    const response = await GuestApi.post<RegisterResponse>(endpoints.user.register, data);
 
-    if (!response.data.success) {
-      throw new Error(response.data.message || "Registration failed");
+    if (!response.data || !response.data.data) {
+      throw new Error(response.data?.message || "Registration failed");
     }
     return response.data.data; 
   },
