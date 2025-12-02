@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { usersApi } from "../../../api/usersApi";
-import { User, LoginPayload } from "../../../types/User";
+import { User, LoginPayload, RegisterPayload } from "../../../types/User";
 
 interface AuthState {
   user: User | null;
@@ -16,12 +16,28 @@ const initialState: AuthState = {
 };
 
 // Async Thunks
-export const loginUser = createAsyncThunk<User, LoginPayload>("auth/loginUser", async (credentials, { rejectWithValue }) => {
+export const loginUser = createAsyncThunk<User, LoginPayload>(
+  "auth/loginUser",
+  async (credentials, { rejectWithValue }) => {
     try {
       const userData = await usersApi.login(credentials);
       return userData;
     } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed");
+      const message = error.response?.data?.message || error.message || "Login failed";
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const registerUser = createAsyncThunk<User, RegisterPayload>(
+  "auth/registerUser",
+  async (newUserData, { rejectWithValue }) => {
+    try {
+      const userCreated = await usersApi.userRegister(newUserData);
+      return userCreated;
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message || "Registration failed";
+      return rejectWithValue(message);
     }
   }
 );
@@ -37,6 +53,7 @@ const authSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -51,6 +68,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      // Register
+      .addCase(registerUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         localStorage.removeItem("user");
