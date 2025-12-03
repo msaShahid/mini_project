@@ -5,11 +5,11 @@ const userController = {
 
 	list: async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const body = req.body;
-			const data = await userService.userList();
+			const users = await userService.userList();
 			res.status(200).json({
-				message: 'User List fetch successfully',
-				data
+				success: true,
+				message: "User list fetched successfully",
+				data: users
 			})
 		} catch (error) {
 			next(error);
@@ -19,18 +19,20 @@ const userController = {
 	getUser: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
 		try {
 			const { id } = req.params;
-			const data = await userService.findUserById(id);
+			const user = await userService.findUserById(id);
 
-			if (!data) {
+			if (!user) {
 				return res.status(404).json({
-					message: 'User not found',
-				})
+					success: false,
+					message: "User not found",
+				});
 			}
 
 			res.status(200).json({
-				message: 'User Details.',
-				data
-			})
+				success: true,
+				message: "User details fetched successfully",
+				data: user,
+			});
 		} catch (error) {
 			next(error)
 		}
@@ -38,25 +40,27 @@ const userController = {
 
 	register: async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const newData = req.body;
+			const data = req.body;
 
-			const existingUser = await userService.findUserByEmail(newData.email);
+			// Checking duplicate email 
+			const existingUser = await userService.findUserByEmail(data.email);
 			if (existingUser) {
 				return res.status(409).json({
-					message: `User already exit with this ${newData.email}`,
+					success: false,
+					message: `User already exists with email ${data.email}`,
 				});
 			}
 
-			const user = await userService.userRegiter(newData);
+			const user = await userService.userRegister(data);
 			res.status(201).json({
-				message: 'User create successfully.',
+				success: true,
+				message: "User created successfully",
 				data: {
 					id: user._id,
 					name: user.name,
-					email: user.email
-				}
-
-			})
+					email: user.email,
+				},
+			});
 		} catch (error) {
 			next(error);
 		}
@@ -66,18 +70,19 @@ const userController = {
 		try {
 			const { email, password } = req.body;
 
-			if (!email && !password) {
+			if (!email || !password) {
 				return res.status(400).json({
-					message: 'Email and Password are required.'
-				})
+					success: false,
+					message: "Email and password are required",
+				});
 			}
 
 			const result = await userService.userLogin(email, password);
-
 			if (!result) {
 				return res.status(401).json({
-					message: 'Invalid Email and Password '
-				})
+					success: false,
+					message: "Invalid email or password",
+				});
 			}
 
 			return res.status(200).json({
@@ -87,7 +92,7 @@ const userController = {
 					_id: result.user.id,
 					name: result.user.name,
 					email: result.user.email,
-					token: result.token 
+					token: result.token
 				}
 			});
 
@@ -99,16 +104,18 @@ const userController = {
 	update: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
 		try {
 			const { id } = req.params;
-			const newData = req.body;
-			const data = await userService.userUpdate(id, newData);
+			const body = req.body;
+			const updated = await userService.userUpdate(id, body);
 
-			if (!data) {
+			if (!updated) {
 				return res.status(404).json({
-					message: 'User not found',
-				})
+					success: false,
+					message: "User not found",
+				});
 			}
 
 			res.status(200).json({
+				success: true,
 				message: 'User update successfully.'
 			})
 		} catch (error) {
@@ -119,17 +126,19 @@ const userController = {
 	delete: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
 		try {
 			const { id } = req.params;
-			const data = await userService.userDelete(id);
+			const deleted = await userService.userDelete(id);
 
-			if (!data) {
+			if (!deleted) {
 				return res.status(404).json({
-					message: 'User not found',
-				})
+					success: false,
+					message: "User not found",
+				});
 			}
 
 			res.status(200).json({
-				message: 'User delete successfully.'
-			})
+				success: true,
+				message: "User deleted successfully",
+			});
 		} catch (error) {
 			next(error);
 		}
@@ -139,12 +148,14 @@ const userController = {
 		const file = req.file;
 		if (!file) {
 			return res.status(400).json({
-				message: 'No file uploaded.',
-			})
+				success: false,
+				message: "No file uploaded",
+			});
 		}
 
 		res.status(200).json({
-			message: 'Profile image uploaded successfully.',
+			success: true,
+			message: "Profile image uploaded successfully",
 			file: file,
 			url: `/uploads/users/${file.filename}`
 		})
