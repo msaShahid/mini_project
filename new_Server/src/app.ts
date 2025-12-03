@@ -5,6 +5,7 @@ import apiRouter from './routes/index.js';
 import { rateLimiter } from './middleware/rateLimiter.middleware.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { logger } from './utils/logger.js';
+import client from './cache/client.js';
 
 const app = express();
 
@@ -15,6 +16,15 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(loggerMiddleware);
 
 app.use('/api/v1', rateLimiter, apiRouter);
+
+app.get("/health/redis", async (req, res) => {
+  try {
+    const pong = await client.ping();
+    res.status(200).send(`Redis OK: ${pong}`);
+  } catch (err) {
+    res.status(500).send("Redis DOWN");
+  }
+});
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
