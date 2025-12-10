@@ -1,73 +1,63 @@
-# React + TypeScript + Vite
+#  How to Start Node Application with Redis (Using Docker Stack)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Run Redis Stack Using Docker**
 
-Currently, two official plugins are available:
+Start Redis Stack container:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
 
-## React Compiler
+This will:
+* Start Redis Stack (Redis + RedisInsight UI)
+* Expose Redis on **localhost:6379**
+* Expose RedisInsight UI on **localhost:8001**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 2. Open a Terminal Inside the Redis Container**
 
-## Expanding the ESLint configuration
+To enter the Redis CLI:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+docker exec -it redis-stack redis-cli
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+You are now inside Redis CLI and can run Redis commands.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 3. Set Redis Password**
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Inside the Redis CLI, set a password:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+CONFIG SET requirepass password
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Replace `password` with your own strong password.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Verify password:
+AUTH password
+
+If successful → Redis is now password-protected.
+
+##  Update Your Node.js Redis Client**
+
+Use your Redis password in your Node app:
+
+const client = createClient({
+  url: "redis://default:password@localhost:6379"
+});
+
+Replace `password` with the one you set in step 3.
+
+
+## Start Node Application**
+Install dependencies:
+npm install
+
+Start the app:
+npm run start
+
+Or in development:
+npm run dev
+
+## Now Your Node App + Redis Stack Is Running Successfully**
+
+✔ Redis running in Docker
+✔ Password protection enabled
+✔ Node app connected securely to Redis
+✔ RedisInsight available at: [http://localhost:8001](http://localhost:8001)
+
+
