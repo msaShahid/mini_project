@@ -5,6 +5,10 @@ import { Post } from "../types/Post";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Modal } from "../components/common/Modal";
 import PostForm from "../components/posts/PostForm"; // reusable form for create/edit
+import StatSkeleton from "../components/dashboard/StatSkeleton";
+import Stat from "../components/dashboard/Stat";
+import Td from "../components/common/Table/Td";
+import Th from "../components/common/Table/Th";
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,7 +23,7 @@ const Dashboard: React.FC = () => {
   }, [dispatch]);
 
   const handleAddPost = () => {
-    setSelectedPost(null); 
+    setSelectedPost(null);
     setFormOpen(true);
   };
 
@@ -45,6 +49,8 @@ const Dashboard: React.FC = () => {
   const draftCount = posts.filter((p) => p.status === "Draft").length;
 
   return (
+
+
     <section className="min-h-screen bg-gray-50 px-6 py-12">
       <div className="max-w-7xl mx-auto">
 
@@ -63,75 +69,80 @@ const Dashboard: React.FC = () => {
           </button>
         </header>
 
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
-            <h3 className="text-lg font-medium text-gray-700">Total Posts</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{posts.length}</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
-            <h3 className="text-lg font-medium text-gray-700">Published</h3>
-            <p className="text-2xl font-bold text-green-600 mt-2">{publishedCount}</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
-            <h3 className="text-lg font-medium text-gray-700">Drafts</h3>
-            <p className="text-2xl font-bold text-yellow-500 mt-2">{draftCount}</p>
-          </div>
-        </div>
-
-
         {loading && <p className="text-gray-500 text-center">Loading posts...</p>}
         {error && <p className="text-red-500 text-center">{error}</p>}
 
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
-            <div
-              key={post._id}
-              className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col justify-between"
-            >
-              <div>
-                <h4
-                  className={`text-xl font-semibold mb-2 ${
-                    post.status === "Draft" ? "text-gray-600" : "text-gray-900"
-                  }`}
-                >
-                  {post.name}
-                </h4>
-                <p className="text-gray-700 mb-4 line-clamp-3">{post.description}</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span
-                  className={`text-sm font-medium px-3 py-1 rounded-full ${
-                    post.status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {post.status === "active" ? "Published" : "Draft"}
-                </span>
-
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleEditPost(post)}
-                    className="text-blue-600 hover:text-blue-800"
-                    title="Edit Post"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => openDeleteModal(post)}
-                    className="text-red-600 hover:text-red-800"
-                    title="Delete Post"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          {loading ? (
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              <Stat title="Total Posts" value={posts.length} />
+              <Stat title="Published" value={publishedCount} color="text-green-600" />
+              <Stat title="Drafts" value={draftCount} color="text-yellow-500" />
+            </>
+          )}
         </div>
+
+        <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+          <table className="min-w-full border-collapse">
+            <thead className="bg-gray-100">
+              <tr>
+                <Th>Title</Th>
+                <Th>Description</Th>
+                <Th>Status</Th>
+                <Th className="text-right">Actions</Th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-200">
+              {posts.map((post) => (
+                <tr key={post._id} className="hover:bg-gray-50 transition">
+                  <Td>
+                    <h4 className={`font-medium ${post.status === "Draft" ? "text-gray-600" : "text-gray-900"}`}>
+                      {post.name}
+                    </h4>
+                  </Td>
+                  <Td className="max-w-md line-clamp-2">{post.description}</Td>
+                  <Td>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${post.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                        }`}
+                    >
+                      {post.status === "active" ? "Published" : "Draft"}
+                    </span>
+                  </Td>
+
+                  <Td className="text-right">
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        onClick={() => handleEditPost(post)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit Post"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(post)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete Post"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
       </div>
 
       {/* Delete Confirmation Modal */}
