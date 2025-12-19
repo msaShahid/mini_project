@@ -1,14 +1,19 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User, { IUser, ILoginResponse } from '../models/user.model.js';
-import userCache from '../cache/userCache.js';
+import userCache from "../cache/userCache.js";
+import { logger } from '../utils/logger.js';
 
 const USER_PROJECTION = "-password -__v";
 
 function generateToken(user: IUser): string {
+    const secretKey = process.env.JWT_SECRET;
+    if (!secretKey) {
+        throw new Error("JWT secret key is missing. Please set JWT_SECRET environment variable.");
+    }
     return jwt.sign(
         { id: user._id.toString(), name: user.name, email: user.email },
-        process.env.JWT_SECRET as string,
+        secretKey,
         { expiresIn: "1h" }
     );
 }
@@ -17,35 +22,48 @@ const userService = {
 
     async userList(): Promise<IUser[]> {
 
-        // Try redis cache
-        const cached = await userCache.getUserList();
-        if (cached?.data) {
-            return cached.data;
+        try {
+            const cached = await userCache.getUserList();
+            if (cached?.data) {
+                logger.info("User List → Cache HIT");
+                return cached.data;
+            }
+
+            logger.info("User List → Cache MISS, fetching from DB");
+
+            const users = await User.find()
+                .select(USER_PROJECTION)
+                .sort({ createdAt: -1 });
+
+            // Store to Redis
+            await userCache.saveUserList(users);
+
+            return users;
+        } catch (err) {
+            logger.warn("Redis unavailable, fetching users from DB", err);
+            return User.find().select(USER_PROJECTION).sort({ createdAt: -1 });
         }
-
-        console.log("User List → Cache MISS, fetching from DB");
-
-        // DB query
-        const users = await User.find().select(USER_PROJECTION).sort({ createdAt: -1 });
-
-        // Store to Redis
-        await userCache.saveUserList(users);
-
-        return users;
     },
 
     async findUserById(id: string): Promise<IUser | null> {
-        const cached = await userCache.getUserDetails(id);
-        if (cached?.data) {
-            return cached.data;
-        }
+        try {
+            const cached = await userCache.getUserDetails(id);
+            if (cached?.data) {
+                logger.info(`User ${id} → Cache HIT`);
+                return cached.data;
+            }
 
-        const user = await User.findById(id).select(USER_PROJECTION);
-        if (user) {
-            await userCache.saveUserDetails(id, user.toObject());
-        }
+            const user = await User.findById(id).select(USER_PROJECTION);
 
-        return user
+            if (user) {
+                await userCache.saveUserDetails(id, user.toObject());
+            }
+
+            return user;
+        } catch (err) {
+            logger.warn(`Redis unavailable, fetching user ${id} from DB`, err);
+            return User.findById(id).select(USER_PROJECTION);
+        }
     },
 
     async findUserByEmail(email: string): Promise<IUser | null> {
@@ -55,18 +73,24 @@ const userService = {
     async userRegister(data: IUser): Promise<IUser> {
         const user = await User.create(data);
 
-        //  Invalidate only the user list
-        await userCache.invalidateUser();
+        try {
+            await userCache.invalidateUser();
+        } catch (err) {
+            logger.warn("Redis invalidate failed on user register", err);
+        }
 
         return user;
     },
 
     async userUpdate(id: string, data: Partial<IUser>): Promise<IUser | null> {
-        const user = await User.findByIdAndUpdate(id, data, { new: true }).select(USER_PROJECTION);
+        const user = await User.findByIdAndUpdate(id, data, { new: true, }).select(USER_PROJECTION);
 
         if (user) {
-            // Invalidate both list and user details cache
-            await userCache.invalidateUser(id);
+            try {
+                await userCache.invalidateUser(id);
+            } catch (err) {
+                logger.warn(`Redis invalidate failed for user ${id}`, err);
+            }
         }
 
         return user;
@@ -76,8 +100,11 @@ const userService = {
         const deleted = await User.findByIdAndDelete(id);
 
         if (deleted) {
-            // Remove both the list and this user's cached data
-            await userCache.invalidateUser(id);
+            try {
+                await userCache.invalidateUser(id);
+            } catch (err) {
+                logger.warn(`Redis invalidate failed for user ${id}`, err);
+            }
         }
 
         return deleted;
