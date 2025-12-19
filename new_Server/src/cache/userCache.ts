@@ -1,52 +1,44 @@
 import { IUser } from "../models/user.model.js";
 import { getUserDetailsKey, getUserListKey } from "./keys.js";
-import { setJson, getJson } from "./query.js";
-import client from "./index.js";
-import { caching } from "../config.js";
+import { setJson, getJson, deleteKey } from "./query.js";
+import { cacheConfig } from "../config/redis.js";
 
-const TTL_MS = Number(caching.contentCacheDuration);
+const TTL = cacheConfig.contentCacheTTL;
 
-// Save all users
-async function saveUserList(users: IUser[]) {
-  const key = getUserListKey();
-  const expiry = new Date(Date.now() + TTL_MS);
+type Cached<T> = {
+  data: T;
+  cachedAt: string;
+};
 
-  return setJson(key, { 
-    data: users, 
-    cachedAt: new Date().toISOString() 
-  }, expiry);
+export async function saveUserList(users: IUser[]) {
+  return setJson<Cached<IUser[]>>(
+    getUserListKey(),
+    { data: users, cachedAt: new Date().toISOString() },
+    TTL
+  );
 }
 
-// Get all users
-async function getUserList() {
-  const key = getUserListKey();
-  return getJson<{ data: IUser[], cachedAt: string }>(key);
+export async function getUserList() {
+  return getJson<Cached<IUser[]>>(getUserListKey());
 }
 
-// Save single user details
-async function saveUserDetails(userId: string, data: IUser) {
-  const key = getUserDetailsKey(userId);
-  const expiry = new Date(Date.now() + TTL_MS);
-
-  return setJson(key, {
-    data,
-    cachedAt: new Date().toISOString()
-  }, expiry);
+export async function saveUserDetails(userId: string, user: IUser) {
+  return setJson<Cached<IUser>>(
+    getUserDetailsKey(userId),
+    { data: user, cachedAt: new Date().toISOString() },
+    TTL
+  );
 }
 
-// Get single user details
-async function getUserDetails(userId: string) {
-  const key = getUserDetailsKey(userId);
-  return getJson<{ data: IUser, cachedAt: string }>(key);
+export async function getUserDetails(userId: string) {
+  return getJson<Cached<IUser>>(getUserDetailsKey(userId));
 }
 
-// Invalidate cache
-async function invalidateUser(userId?: string) {
+export async function invalidateUser(userId?: string) {
   if (userId) {
-    await client.del(getUserDetailsKey(userId)); 
+    await deleteKey(getUserDetailsKey(userId));
   }
-
-  await client.del(getUserListKey()); 
+  await deleteKey(getUserListKey());
 }
 
 export default {
@@ -54,5 +46,5 @@ export default {
   getUserList,
   saveUserDetails,
   getUserDetails,
-  invalidateUser
+  invalidateUser,
 };

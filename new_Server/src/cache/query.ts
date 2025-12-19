@@ -1,7 +1,8 @@
-import client from "./index.js";
+import redis  from "./client.js";
+import { logger } from "../utils/logger.js";
 
 function ensureConnected() {
-  if (!client.isOpen) {
+  if (!redis.isOpen) {
     throw new Error("Redis client is not connected");
   }
 }
@@ -9,36 +10,39 @@ function ensureConnected() {
 export async function setJson<T>(
   key: string,
   value: T,
-  expireAt?: Date
-) {
-  ensureConnected()
+  ttlMs?: number
+): Promise<boolean> {
+  ensureConnected();
+
   try {
-    const json = JSON.stringify(value);
+    const payload = JSON.stringify(value);
 
-    if (expireAt) {
-      const ttl = expireAt.getTime() - Date.now();
-      if (ttl <= 0) return false;
-
-      return await client.set(key, json, { PX: ttl });
+    if (ttlMs && ttlMs > 0) {
+      await redis.set(key, payload, { PX: ttlMs });
+    } else {
+      await redis.set(key, payload);
     }
 
-    return await client.set(key, json);
+    return true;
   } catch (err) {
-    console.error("Redis setJson error:", err);
+    logger.error("Redis setJson error:", err);
     return false;
   }
 }
 
 export async function getJson<T>(key: string): Promise<T | null> {
-  ensureConnected()
-  try {
-    const type = await client.type(key);
-    if (type !== "string") return null;
+  ensureConnected();
 
-    const raw = await client.get(key);
+  try {
+    const raw = await redis.get(key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch (err) {
-    console.error("Redis getJson error:", err);
+    logger.error("Redis getJson error:", err);
     return null;
   }
+}
+
+export async function deleteKey(key: string) {
+  ensureConnected();
+  await redis.del(key);
 }

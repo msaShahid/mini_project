@@ -1,15 +1,21 @@
 import { createClient } from "redis";
-import { redis } from "../config.js";
+import { redisConfig } from "../config/redis.js";
+import { logger } from "../utils/logger.js";
 
-const redisURL = `redis://:${redis.password}@${redis.host}:${redis.port}`;
+const redis = createClient({
+  socket: {
+    host: redisConfig.host|| "redis-stack",
+    port: Number(redisConfig.port) || 6379,
+  },
+  ...(redisConfig.password
+    ? { password: redisConfig.password }
+    : {}),
+});
 
-const client = createClient({url: redisURL});
+redis.on("connect", () => logger.info("Redis connecting..."));
+redis.on("ready", () => logger.info("Redis ready"));
+redis.on("reconnecting", () => logger.warn("Redis reconnecting..."));
+redis.on("end", () => logger.warn("Redis connection closed"));
+redis.on("error", (err) => logger.error("Redis error:", err));
 
-// Events
-client.on("connect", () => console.log("Redis: Connecting..."));
-client.on("ready", () => console.log("Redis: Ready"));
-client.on("end", () => console.log("Redis: Connection closed"));
-client.on("reconnecting", () => console.log("Redis: Reconnecting..."));
-client.on("error", (err) => console.error("Redis Error:", err));
-
-export default client;
+export default redis;

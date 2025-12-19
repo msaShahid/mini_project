@@ -1,15 +1,16 @@
-import client from './client.js';
+import  redis from "./client.js";
+import { logger } from "../utils/logger.js";
 
 export async function connectRedis() {
-  if (!client.isOpen) {
-    try {
-      await client.connect();
-      console.log('Redis client connected');
-    } catch (err) {
-      console.error('Redis connection failed:', err);
-      setTimeout(connectRedis, 5000); 
-    }
+  if (!redis.isOpen) {
+    await redis.connect();
+    logger.info("Redis connected");
   }
 }
 
-export default client;
+export async function disconnectRedis() {
+  if (redis.isOpen) {
+    await redis.quit();
+    logger.info("Redis disconnected");
+  }
+}

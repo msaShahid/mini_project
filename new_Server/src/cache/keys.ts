@@ -4,20 +4,17 @@ export const RedisPrefixes = {
   DETAILS: "details",
 } as const;
 
-export type RedisPrefixKey = keyof typeof RedisPrefixes;
+type Prefix = typeof RedisPrefixes[keyof typeof RedisPrefixes];
+type KeyPart = Prefix | string;
 
-export function buildKey(
-  prefix: RedisPrefixKey,
-  subPrefix: RedisPrefixKey,
-  id: string
-) {
-  return `${RedisPrefixes[prefix]}:${RedisPrefixes[subPrefix]}:${id}`;
+function buildKey(...parts: KeyPart[]) {
+  return parts.join(":");
 }
 
 export function getUserDetailsKey(userId: string) {
-  return buildKey("USER", "DETAILS", userId);
+  return buildKey(RedisPrefixes.USER, RedisPrefixes.DETAILS, userId);
 }
 
 export function getUserListKey() {
-  return buildKey("USER", "LIST", "ALL");
+  return buildKey(RedisPrefixes.USER, RedisPrefixes.LIST, "ALL");
 }
