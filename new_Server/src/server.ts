@@ -1,74 +1,60 @@
-import cluster from 'cluster';
-import os from 'os';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import app from './app.js';
-import { logger } from './utils/logger.js';
-import { connectRedis } from './cache/index.js';
+import dotenv from "dotenv";
+import app from "./app.js";
+import { logger } from "./utils/logger.js";
+import connectDB from "./config/db.js";
+import { connectRedis, disconnectRedis } from "./cache/index.js";
+import { initKafka, shutdownKafka } from "./kafka/index.js";
 
-dotenv.config({ path: '.env' });
+dotenv.config();
 
-const PORT = process.env.PORT || 5000;
-const numCPUs = Math.max(os.cpus().length - 1, 1);
+const PORT = Number(process.env.PORT) || 5000;
 
-if (cluster.isPrimary) {
-  logger.info(`Master ${process.pid} is running`);
+let isShuttingDown = false;
 
+async function bootstrap() {
   try {
-    await connectRedis();
-    logger.info("Redis connected (master)");
-  } catch (err) {
-    logger.error("Redis connection failed:", err);
-    process.exit(1);
-  }
+    logger.info("Starting server...");
 
-  // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
+    await connectDB();
+    // await connectRedis();
+    // await initKafka();
 
-  // Restart worker on exit
-  cluster.on('exit', (worker, code, signal) => {
-    logger.warn(`Worker ${worker.process.pid} died. Restarting...`);
-    cluster.fork();
-  });
+    const server = app.listen(PORT, () => {
+      logger.info(`API running on port ${PORT}`);
+    });
 
-  // shutdown master
-  process.on('SIGTERM', () => {
-    logger.info('Master shutting down gracefully');
-    for (const id in cluster.workers) {
-      cluster.workers[id]?.kill('SIGTERM');
-    }
-    process.exit(0);
-  });
+    const shutdown = async (signal: string) => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
 
-} else {
-  // Worker process: connect to DB and start server
+      logger.warn(`Shutting down (${signal})`);
 
-  try {
-    await connectRedis();
-    logger.info(`Redis connected (worker ${process.pid})`);
-  } catch (err) {
-    logger.error(`Redis connection failed (worker ${process.pid}):`, err);
-    process.exit(1);
-  }
+      // server.close(async () => {
+      //   logger.info("HTTP server closed");
 
-  if (process.env.MODE !== "test") {
-    mongoose.connect(process.env.MONGO_URL as string)
-      .then(() => {
-        app.listen(PORT, () => {
-          logger.info(`Worker ${process.pid} started on port ${PORT}`);
-        });
-      })
-      .catch((err) => {
-        logger.error('MongoDB connection error:', err);
+      //   try {
+      //     await shutdownKafka();
+      //     await disconnectRedis();
+      //   } catch (err) {
+      //     logger.error("Shutdown error:", err);
+      //   } finally {
+      //     process.exit(0);
+      //   }
+      // });
+
+      setTimeout(() => {
+        logger.error("Force shutdown after timeout");
         process.exit(1);
-      });
-  }
+      }, 10_000).unref();
+    };
 
-  // shutdown worker
-  process.on('SIGTERM', () => {
-    logger.info(`Worker ${process.pid} shutting down gracefully`);
-    process.exit(0);
-  });
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+
+  } catch (err) {
+    logger.error("Startup failed:", err);
+    process.exit(1);
+  }
 }
+
+bootstrap();
