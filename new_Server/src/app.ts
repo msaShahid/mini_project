@@ -6,10 +6,13 @@ import { rateLimiter } from './middleware/rateLimiter.middleware.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { logger } from './utils/logger.js';
 import redis from './cache/client.js';
+import helmet from 'helmet';
+
 
 const app = express();
-
+app.use(helmet());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
