@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../store/redux/hooks";
 import { fetchPosts, deletePost } from "../store/redux/slices/postSlice";
 import { Post } from "../types/Post";
@@ -45,8 +45,19 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const publishedCount = posts.filter((p) => p.status === "active").length;
-  const draftCount = posts.filter((p) => p.status === "Draft").length;
+  const { publishedCount, draftCount } = useMemo(() => {
+    let published = 0;
+    let draft = 0;
+
+    for (const post of posts) {
+      if (post.status === "active") published++;
+      if (post.status === "draft") draft++;
+    }
+
+    return { publishedCount: published, draftCount: draft };
+  }, [posts]);
+
+  const totalCount =  posts.length || 0;
 
   return (
 
@@ -81,7 +92,7 @@ const Dashboard: React.FC = () => {
             </>
           ) : (
             <>
-              <Stat title="Total Posts" value={posts.length} />
+              <Stat title="Total Posts" value={totalCount} />
               <Stat title="Published" value={publishedCount} color="text-green-600" />
               <Stat title="Drafts" value={draftCount} color="text-yellow-500" />
             </>

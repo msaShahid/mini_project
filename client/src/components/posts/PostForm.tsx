@@ -15,7 +15,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
 
   const [name, setName] = useState(post?.name || "");
   const [description, setDescription] = useState(post?.description || "");
-  const [status, setStatus] = useState(post?.status || "Draft");
+  const [status, setStatus] = useState(post?.status || "draft");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
     } else {
       setName("");
       setDescription("");
-      setStatus("Draft");
+      setStatus("draft");
     }
   }, [post, isOpen]);
 
@@ -101,7 +101,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="active">Published</option>
-            <option value="Draft">Draft</option>
+            <option value="draft">Draft</option>
           </select>
         </div>
       </form>
