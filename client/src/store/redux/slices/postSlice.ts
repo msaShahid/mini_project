@@ -90,7 +90,7 @@ export const deletePost = createAsyncThunk<string, string>(
   async (id, { rejectWithValue }) => {
     try {
       await postApi.deletePost(id);
-      return id; 
+      return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to delete post");
     }
@@ -104,6 +104,21 @@ const postSlice = createSlice({
   reducers: {
     clearSelectedPost: (state) => {
       state.selectedPost = null;
+    },
+    // WebSocket / real-time updates
+    addPostRealtime: (state, action: PayloadAction<Post>) => {
+      state.posts.unshift(action.payload);
+      state.myPosts.unshift(action.payload);
+    },
+    updatePostRealtime: (state, action: PayloadAction<Post>) => {
+      const updated = action.payload;
+      state.posts = state.posts.map((p) => (p._id === updated._id ? updated : p));
+      state.myPosts = state.myPosts.map((p) => (p._id === updated._id ? updated : p));
+    },
+    deletePostRealtime: (state, action: PayloadAction<string>) => {
+      const id = action.payload;
+      state.posts = state.posts.filter((p) => p._id !== id);
+      state.myPosts = state.myPosts.filter((p) => p._id !== id);
     },
   },
 
@@ -175,6 +190,6 @@ const postSlice = createSlice({
   },
 });
 
-export const { clearSelectedPost } = postSlice.actions;
+export const { clearSelectedPost, addPostRealtime, updatePostRealtime, deletePostRealtime } = postSlice.actions;
 
 export default postSlice.reducer;
