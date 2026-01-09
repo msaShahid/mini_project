@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/redux/hooks";
-import { fetchPosts, deletePost } from "../store/redux/slices/postSlice";
+import { deletePost, addPostRealtime, fetchPosts } from "../store/redux/slices/postSlice";
 import { Post } from "../types/Post";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Modal } from "../components/common/Modal";
@@ -9,6 +9,7 @@ import StatSkeleton from "../components/dashboard/StatSkeleton";
 import Stat from "../components/dashboard/Stat";
 import Td from "../components/common/Table/Td";
 import Th from "../components/common/Table/Th";
+import toast from "react-hot-toast";
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -17,9 +18,45 @@ const Dashboard: React.FC = () => {
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  // useEffect(() => {
+  //   dispatch(fetchPosts());
+  // }, [dispatch]);
 
   useEffect(() => {
+    // Initialize WS connection only once
+    if (!wsRef.current) {
+      const wsUrl = "ws://localhost:5000";
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => console.log("Connected to WS server");
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === "create") {
+            dispatch(addPostRealtime(data.post));
+            toast.success(`New post: ${data.post.name}`);
+          }
+        } catch (err) {
+          console.error("WS parse error:", err);
+        }
+      };
+
+      ws.onclose = () => console.log("WS connection closed");
+      ws.onerror = (err) => console.error("WS error:", err);
+    }
     dispatch(fetchPosts());
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
   }, [dispatch]);
 
   const handleAddPost = () => {
@@ -57,7 +94,7 @@ const Dashboard: React.FC = () => {
     return { publishedCount: published, draftCount: draft };
   }, [posts]);
 
-  const totalCount =  posts.length || 0;
+  const totalCount = posts.length || 0;
 
   return (
 
