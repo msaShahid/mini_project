@@ -72,7 +72,18 @@ const postController = {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ message: 'User not authorized' })
 
-      const newData: PostDTO = req.body;
+     // const newData: PostDTO = req.body;
+      const files = req.files as Express.Multer.File[];
+
+      const images = files?.map((file) => {
+        // store relative path (recommended)
+        return `uploads/posts/${file.filename}`;
+      });
+
+      const newData = {
+        ...req.body,
+        images, 
+      };
       const data = await postService.postCreate(userId, newData);
 
       res.status(201).json({
