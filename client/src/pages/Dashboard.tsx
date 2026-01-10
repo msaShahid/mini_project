@@ -141,6 +141,7 @@ const Dashboard: React.FC = () => {
             <thead className="bg-gray-100">
               <tr>
                 <Th>Title</Th>
+                <Th>Image</Th>
                 <Th>Description</Th>
                 <Th>Status</Th>
                 <Th className="text-right">Actions</Th>
@@ -155,6 +156,25 @@ const Dashboard: React.FC = () => {
                       {post.name}
                     </h4>
                   </Td>
+                  <Td>
+                    {post.images && post.images.length > 0 ? (
+                      <div className="flex gap-2">
+                        {post.images.map((img, index) => (
+                          <img
+                            key={index}
+                            src={`http://localhost:5000/${img}`} 
+                            alt={`Post ${post.name} ${index}`}
+                            className="w-16 h-16 object-cover rounded-md border"
+                            loading="lazy"
+                            
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">No images</span>
+                    )}
+                  </Td>
+
                   <Td className="max-w-md line-clamp-2">{post.description}</Td>
                   <Td>
                     <span

@@ -10,12 +10,14 @@ const getToken = (): string | null => {
 
 export const GuestApi = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
-  headers: { "Content-Type": "application/json", Accept: "application/json" },
+  //headers: { "Content-Type": "application/json", Accept: "application/json" },
+   withCredentials: true,
 });
 
 export const AuthApi = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
-  headers: { "Content-Type": "application/json", Accept: "application/json" },
+  //headers: { "Content-Type": "application/json", Accept: "application/json" },
+   withCredentials: true,
 });
 
 AuthApi.interceptors.request.use(

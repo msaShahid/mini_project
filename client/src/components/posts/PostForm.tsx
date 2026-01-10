@@ -5,7 +5,7 @@ import { useAppDispatch } from "../../store/redux/hooks";
 import { createPost, updatePost } from "../../store/redux/slices/postSlice";
 
 interface PostFormProps {
-  post?: Post | null; 
+  post?: Post | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -14,6 +14,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
   const dispatch = useAppDispatch();
 
   const [name, setName] = useState(post?.name || "");
+  const [images, setImages] = useState<File[]>([]);
   const [description, setDescription] = useState(post?.description || "");
   const [status, setStatus] = useState(post?.status || "draft");
   const [loading, setLoading] = useState(false);
@@ -22,14 +23,21 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
     // Reset form when opening modal
     if (post) {
       setName(post.name);
+      setImages([]);
       setDescription(post.description);
       setStatus(post.status);
     } else {
       setName("");
+      setImages([]);
       setDescription("");
       setStatus("draft");
     }
   }, [post, isOpen]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setImages(Array.from(e.target.files));
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -37,14 +45,18 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
     try {
       if (post) {
         // Update
-        await dispatch(updatePost({ id: post._id, data: { name, description, status } }));
+        await dispatch(
+          updatePost(
+            { id: post._id, data: { name, images, description, status } }
+          )
+        );
       } else {
         // Create
-        await dispatch(createPost({
-            name, description, status,
-            images: [],
-            tag: []
-        }));
+        await dispatch(
+          createPost(
+            { name, description, status, images, tag: [] }
+          )
+        );
       }
       onClose();
     } catch (err) {
@@ -76,6 +88,29 @@ const PostForm: React.FC<PostFormProps> = ({ post, isOpen, onClose }) => {
             required
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1 multiple">
+            Image
+          </label>
+          <input
+            type="file"
+            name="images"
+            className="w-full border rounded-md px-3 py-2"
+            multiple
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+        </div>
+        <div className="flex gap-2 mt-2 flex-wrap">
+          {images.map((img, idx) => (
+            <img
+              key={idx}
+              src={URL.createObjectURL(img)}
+              className="w-20 h-20 object-cover rounded"
+            />
+          ))}
         </div>
 
         <div>
