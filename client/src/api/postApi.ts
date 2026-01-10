@@ -1,11 +1,15 @@
 import { CreatePostPayload, Post, PostListResponse, PostResponse } from "../types/Post";
+import { buildPostFormData } from "../utils/buildPostFormData";
 import { AuthApi } from "./axiosClient";
 import { endpoints } from "./endpoints";
 
 export const postApi = {
-  
+
   async createPost(data: CreatePostPayload): Promise<Post> {
-    const response = await AuthApi.post<PostResponse>(endpoints.post.create, data);
+    const response = await AuthApi.post<PostResponse>(
+      endpoints.post.create,
+      buildPostFormData(data)
+    );
     return response.data.data;
   },
 

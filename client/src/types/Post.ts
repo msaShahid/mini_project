@@ -14,7 +14,7 @@ export interface Post {
 export interface CreatePostPayload {
   name: string;
   description: string;
-  images: string[];
+  images: File[];
   tag: string[];
   status?: string;
 }
