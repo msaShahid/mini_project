@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', postController.list);
 router.get('/user', authMiddleware, postController.userPost);
 router.get('/:id', authMiddleware, postController.getPostByid);
-router.post('/', authMiddleware, uploadPost.array('image',5), postController.create);
+router.post('/', authMiddleware, uploadPost.array('images',5), postController.create);
 router.put('/:id', authMiddleware, postController.update);
 router.delete('/:id', authMiddleware, postController.delete);
 
