@@ -10,11 +10,25 @@ import helmet from 'helmet';
 
 
 const app = express();
-app.use(helmet());
+app.use(helmet());   
+
+app.use(cors({
+  origin: "http://localhost:5173", 
+  credentials: true,
+}));
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads"), {
+  setHeaders: (res, path) => {
+    // Allow your frontend to load images
+    //res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+    // res.setHeader("Access-Control-Allow-Methods", "GET");
+    // res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");   
+  }
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(loggerMiddleware);
 
